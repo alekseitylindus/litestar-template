@@ -1,0 +1,220 @@
+from dataclasses import dataclass, field
+from typing import Literal, cast
+
+from environs import env, validate
+from litestar.data_extractors import RequestExtractorField, ResponseExtractorField
+
+from app.config.constants import BASE_DIR
+
+ENVFILE = BASE_DIR / ".env"
+
+env.read_env(ENVFILE)
+
+
+@dataclass
+class AppSettings:
+    """App settings."""
+
+    secret_key: str
+    """Application secret key."""
+    url: str = "http://127.0.0.1:8000/"
+    """Frontend url."""
+    debug: bool = False
+    """Run `Litestar` with `debug=True`."""
+    name: str = "{{project_name}}"
+    """Application name."""
+    csrf_cookie_name: str = "csrftoken"
+    """CSRF Cookie Name"""
+    csrf_header_name: str = "x-csrftoken"
+    """CSRF Header Name"""
+    csrf_cookie_secure: bool = False
+    """CSRF Secure Cookie"""
+    allow_origins: list[str] = field(default_factory=lambda: ["*"])
+    """List of origins that are allowed."""
+    sentry_dsn: str | None = None
+    """Sentry DSN."""
+    sentry_env: str = "development"  # noqa: WPS226 allowed for settings
+    """Sentry environment."""
+
+
+@dataclass
+class DBSettings:
+    url: str
+    echo: bool = False
+    """If `True`, the engine will log all statements as well as a repr() of their parameter lists to the default log handler, which defaults to sys.stdout for output."""
+    pool_size: int = 5
+    """The size of the connection pool."""
+    max_overflow: int = 10
+    """The maximum overflow size of the connection pool."""
+
+
+@dataclass
+class RedisSettings:
+    """Redis settings."""
+
+    url: str = "redis://localhost:6379"
+    """A Redis connection URL."""
+    socket_connect_timeout: int = 5
+    """Length of time to wait (in seconds) for a connection to become active."""
+    health_check_interval: int = 5
+    """Length of time to wait (in seconds) before testing connection health."""
+    socket_keepalive: bool = True
+    """Length of time to wait (in seconds) between keepalive commands."""
+    general_db: int = 0
+    """General Redis database."""
+    broker_db: int = 1
+    """Broker Redis database."""
+
+
+LogLevels = Literal["DEBUG", "INFO", "WARNING", "ERROR"]  # noqa: WPS226 allowed for settings
+
+
+@dataclass
+class LogSettings:
+    # https://stackoverflow.com/a/1845097/6560549
+    exclude_paths: str = r"\A(?!x)x"
+    """Regex to exclude paths from logging."""
+    level: LogLevels = "INFO"
+    """Stdlib log levels.
+
+    Only emit logs at this level, or higher.
+    """
+    obfuscate_cookies: set[str] = field(default_factory=lambda: {"session"})
+    """Request cookie keys to obfuscate."""
+    obfuscate_headers: set[str] = field(
+        default_factory=lambda: {"Authorization", "X-API-KEY"},
+    )
+    request_fields: list[RequestExtractorField] = field(
+        default_factory=lambda: [
+            "path",
+            "method",
+            "query",
+            "path_params",
+        ],
+    )
+    """Attributes of the [Request][litestar.connection.request.Request] to be
+    logged."""
+    response_fields: list[ResponseExtractorField] = field(
+        default_factory=lambda: [
+            "status_code",
+        ],
+    )
+    """Attributes of the [Response][litestar.response.Response] to be
+    logged."""
+
+
+@dataclass
+class MailjetSettings:
+    api_key: str
+    """Mailjet API key."""
+    api_secret: str
+    """Mailjet API secret."""
+
+
+@dataclass
+class Settings:
+    """App settings."""
+
+    app: AppSettings
+    db: DBSettings
+    redis: RedisSettings
+    log: LogSettings
+    mailjet: MailjetSettings
+
+
+def get_settings() -> Settings:  # noqa: WPS210 allowed for settings
+    with env.prefixed("APP__"):
+        environment = cast(
+            Literal["development", "production", "test"],  # noqa: WPS226 allowed for settings
+            env.str(
+                "ENVIRONMENT",
+                "development",
+                validate=validate.OneOf(
+                    ["development", "production", "test"],
+                    error="APP__ENVIRONMENT must be one of: {choices}",
+                ),
+            ),
+        )
+
+        with env.prefixed("APP__"):
+            secret_key = (
+                env.str("SECRET_KEY")
+                if environment == "production"
+                else "supersecretkey"
+            )
+            app_settings = AppSettings(
+                secret_key=secret_key,
+                url=env.str("URL", "http://127.0.0.1:8000/"),
+                debug=env.bool("DEBUG", environment != "production"),
+                name=env.str("NAME", "{{project_name}}"),
+                csrf_cookie_name=env.str("CSRF_COOKIE_NAME", "csrftoken"),
+                csrf_header_name=env.str("CSRF_HEADER_NAME", "x-csrftoken"),
+                csrf_cookie_secure=env.bool("CSRF_COOKIE_SECURE", False),
+                allow_origins=env.list("ALLOW_ORIGINS", ["*"]),
+                sentry_dsn=env.str("SENTRY_DSN", None),
+                sentry_env=env.str("SENTRY_ENV", environment),
+            )
+
+        with env.prefixed("DB__"):
+            db_settings = DBSettings(
+                url=env.str(
+                    "URL",
+                    validate=validate.Regexp(r"^postgresql\+asyncpg://.*"),
+                ),
+                echo=env.bool("ECHO", False),
+                pool_size=env.int("POOL_SIZE", 5),
+                max_overflow=env.int("MAX_OVERFLOW", 10),
+            )
+
+        with env.prefixed("REDIS__"):
+            redis_settings = RedisSettings(
+                url=env.str(
+                    "URL",
+                    "redis://localhost:6379",
+                    validate=validate.Regexp(r"redis://.*"),
+                ),
+                socket_connect_timeout=env.int("SOCKET_CONNECT_TIMEOUT", 5),
+                health_check_interval=env.int("HEALTH_CHECK_INTERVAL", 5),
+                socket_keepalive=env.bool("SOCKET_KEEPALIVE", True),
+                general_db=env.int("GENERAL_DB", 0),
+                broker_db=env.int("BROKER_DB", 1),
+            )
+
+        with env.prefixed("LOG__"):
+            log_settings = LogSettings(
+                exclude_paths=env.str("EXCLUDE_PATHS", r"\A(?!x)x"),
+                level=cast(
+                    LogLevels,
+                    env.str(
+                        "LEVEL",
+                        "INFO",
+                        validate=validate.OneOf(
+                            ["DEBUG", "INFO", "WARNING", "ERROR"],
+                            error="APP__LOG__LEVEL must be one of: {choices}",
+                        ),
+                    ),
+                ),
+                obfuscate_cookies=set(env.list("OBFUSCATE_COOKIES", {"session"})),
+                obfuscate_headers=set(
+                    env.list("OBFUSCATE_HEADERS", {"Authorization", "X-API-KEY"}),
+                ),
+                request_fields=env.list(
+                    "REQUEST_FIELDS",
+                    ["path", "method", "query", "path_params"],
+                ),
+                response_fields=env.list("RESPONSE_FIELDS", ["status_code"]),
+            )
+
+        with env.prefixed("MAILJET__"):
+            mailjet_settings = MailjetSettings(
+                api_key=env.str("API_KEY", ""),
+                api_secret=env.str("API_SECRET", ""),
+            )
+
+    return Settings(
+        app=app_settings,
+        db=db_settings,
+        redis=redis_settings,
+        log=log_settings,
+        mailjet=mailjet_settings,
+    )

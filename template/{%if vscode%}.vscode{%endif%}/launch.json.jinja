@@ -1,0 +1,39 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "uvicorn",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "litestar",
+      "args": ["run", "--debug", "--reload", "--port=8000", "--reload-dir=app"],
+      "django": false,
+      "autoStartBrowser": true,
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    },
+    {
+      "name": "faststream",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "faststream",
+      "args": ["run", "--reload", "--factory", "app.infrastructure.worker.factory:create_app"],
+      "django": false,
+      "autoStartBrowser": true,
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "{{project_name}}",
+      "configurations": ["uvicorn", "faststream"],
+      "stopAll": true
+    }
+  ]
+}

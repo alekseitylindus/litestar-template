@@ -1,0 +1,83 @@
+FROM python:{{python_version}}-bookworm AS python-builder
+
+# Install system dependencies
+
+RUN apt-get update -qy \
+    && apt-get install -qyy \
+        build-essential \
+        gettext \
+        zlib1g-dev \
+        libjpeg62-turbo \
+        libjpeg62-turbo-dev \
+    && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
+    && apt-get clean
+
+# Download the latest installer
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+# Run the installer then remove it
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+# Ensure the installed binary is on the `PATH`
+ENV PATH="/root/.local/bin/:$PATH"
+
+# Install project dependencies
+WORKDIR /app
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
+# Copy from the cache instead of linking since it's a mounted volume
+ENV UV_LINK_MODE=copy
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
+
+
+ADD . /app
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+
+##########################################################################
+# Build fronend assets
+##########################################################################
+
+FROM node:20-bookworm AS js-builder
+ARG SENTRY_AUTH_TOKEN
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN:-}
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+##########################################################################
+# Build resulting image
+##########################################################################
+
+FROM python:{{python_version}}-bookworm
+
+RUN apt-get update -qy \
+    && apt-get install -qyy \
+        build-essential \
+        gettext \
+        zlib1g-dev \
+        libjpeg62-turbo \
+        libjpeg62-turbo-dev \
+    && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
+    && apt-get clean
+
+WORKDIR /app
+
+# See <https://hynek.me/articles/docker-signals/>.
+STOPSIGNAL SIGINT
+
+# Copy the application from the builder
+COPY --from=python-builder --chown=app:app /app /app
+# Place executables in the environment at the front of the path
+ENV PATH="/app/.venv/bin:/root/.local/bin:$PATH"
+
+# Copy the frontend assets
+COPY --from=js-builder /app/public /app/public
+
+EXPOSE 8000

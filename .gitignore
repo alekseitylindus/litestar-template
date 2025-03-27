@@ -1,0 +1,27 @@
+# Idea
+.idea/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.log
+*.db
+*.db-journal
+logs/
+.DS_Store
+
+data
+*.sqlite3
+*.env
+
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.venv
+*.mo
+
+# local env files
+.env.local
+.env.*.local

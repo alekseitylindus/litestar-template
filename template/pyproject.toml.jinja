@@ -1,0 +1,129 @@
+[project]
+name = "{{project_slug}}"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">={{python_version}}"
+dependencies = [
+    "aiocache>=0.12.3,<0.13.0",
+    "alembic>=1.15.1,<2",
+    "dishka>=1.5.0,<2",
+    "environs>=14.1.1,<15",
+    "faststream>=0.5.37,<1",
+    "granian>=2.2.0,<3",
+    "httpx>=0.28.1,<1",
+    "ipython>=9.0.2,<10",
+    "litestar-vite>=0.13.1,<1",
+    "litestar[cli,pydantic,redis,standard,jwt]>=2.15.1,<3",
+    "polyfactory>=2.20.0,<3",
+    "pydantic-settings>=2.8.1,<3",
+    "pydantic[email]>=2.10.6,<3",
+    "python-json-logger>=3.3.0,<4",
+    "redis[hiredis]>=5.2.1,<6",
+    "sentry-sdk[litestar]>=2.24.1,<3",
+    "sqlalchemy[postgresql-asyncpg]>=2.0.39,<3",
+    "toolz>=1.0.0,<2",
+]
+
+[dependency-groups]
+dev = [
+    "flake8-pyproject>=1.2.3",
+    "glvars>=0.1.5",
+    "ipykernel>=6.29.5",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+    "pytest-cov>=6.0.0",
+    "pytest-recording>=0.13.2",
+    "ruff>=0.11.2",
+    "wemake-python-styleguide>=1.1.0",
+]
+
+[tool.ruff]
+fix = true
+line-length = 88
+indent-width = 4
+exclude = [
+    "**/.venv",
+    "*migrations*",
+]
+
+[tool.ruff.lint]
+select = [
+    "ALL"
+]
+ignore = [
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed in `*args`
+    "B008", # do not perform function calls in argument defaults
+    "COM812", # Ruff formatter recommeds to desable this rule
+    "D", # pydocstyle
+    "E501", # line too long, handled by black
+    "FA102", # Missing `from __future__ import annotations`
+    "RET504", # Unnecessary assigment before return
+    "TC002",  # Move third-party import into a type-checking block
+    "RUF100", # Sometimes we wnat to ignore WPS rules
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "E402", # import violations
+]
+"**/tests/*" = [
+    "ANN201", # Missing return type annotation for public function
+    "E402", # import violations
+    "S101", # Use of `assert` detected
+    "FBT001", # Boolean positional arguments are allowed in tests
+]
+"conftest.py" = [
+    "ANN201", # Missing return type annotation for public function
+    "E402", # import violations
+    "S101", # Use of `assert` detected
+]
+
+[tool.flake8]
+select = ["WPS"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "**/.venv",
+    "*migrations*",
+    "tests/*",
+]
+per-file-ignores = [
+    "app/infrastructure/application/factory.py:WPS201", # Found too many module members
+    "app/infrastructure/di/providers/app_provider.py:WPS201", # Found too many module members
+    "app/infrastructure/mailjet/types.py:WPS202,WPS115", # Found too many module members
+]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ['pydantic.mypy']
+pretty = true
+strict = true
+# Additional strict options
+ignore_missing_imports = true
+local_partial_types = true
+strict_bytes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_ignores = true
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "pep440"
+version_provider = "pep621"
+update_changelog_on_bump = true
+major_version_zero = true
+
+[tool.coverage.run]
+omit = [
+    "*/__init__.py",
+    "tests/*"
+]
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

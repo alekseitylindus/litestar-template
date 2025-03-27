@@ -1,0 +1,22 @@
+_min_copier_version: "9.0.1"
+
+_subdirectory: template
+
+# questions
+project_name:
+  type: str
+  help: What is your project name?
+
+project_slug:
+  type: str
+  help: What is your project slug?
+  default: "{{ project_name.lower().replace(' ', '_') }}"
+
+python_version:
+  type: str
+  help: What Python version do you want to use?
+  default: "3.13"
+
+---
+!include copier/vscode.yml
+---

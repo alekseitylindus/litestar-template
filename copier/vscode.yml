@@ -1,0 +1,5 @@
+# VSCode
+vscode:
+  type: bool
+  help: Do you want to include VSCode settings?
+  default: true

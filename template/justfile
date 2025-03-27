@@ -1,0 +1,45 @@
+_default:
+  @just --list
+
+sync-secrets:
+    @echo "Syncing secrets..."
+    @uv run glvars -c .glvars.yml
+
+[group('test')]
+test:
+    @echo "Running tests..."
+    @uv run pytest .
+
+[group('test')]
+test-coverage:
+    @echo "Running tests with coverage..."
+    @uv run pytest --cov=app --cov-report=html:.coverage_html .
+    @open .coverage_html/index.html
+
+[group('install')]
+install:
+    @echo "Installing dependencies..."
+    @uv sync
+
+[group('db')]
+makemigration MESSAGE:
+    @echo "Creating migration..."
+    @uv run alembic revision --autogenerate -m "{{MESSAGE}}"
+
+[group('db')]
+migrate:
+    @echo "Applying migrations..."
+    @uv run alembic upgrade head
+
+[group('db')]
+rollback REVISION:
+    @echo "Rolling back migrations..."
+    @uv run alembic downgrade {{REVISION}}
+
+[group('run')]
+run-web:
+    @uv run litestar run --debug --reload --port=8000 --reload-dir=app
+
+[group('run')]
+run-worker:
+    @uv run faststream run --reload --factory app.infrastructure.worker.factory:create_app

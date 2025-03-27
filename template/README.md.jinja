@@ -1,0 +1,97 @@
+# {{ project_name }}
+
+## Project Overview
+
+This is a fullstack project template designed to help you quickly bootstrap new projects with a Litestar backend and React frontend. It follows strict architectural patterns to ensure a scalable and maintainable codebase:
+
+-   **Backend:** Clean Architecture
+-   **Frontend:** Feature-based approach
+
+Key technologies used:
+
+-   Litestar (Python web framework)
+-   React (UI framework)
+-   TypeScript (Type-safe JavaScript)
+-   uv (Python package manager)
+-   npm (JavaScript package manager)
+
+## Getting Started
+
+1.  **Install dependencies:**
+
+    ```bash
+    # Backend
+    uv sync
+
+    # Frontend
+    npm install
+    ```
+
+2.  **Populate the `.env` file:**
+
+    Copy the contents of `.env.example` to `.env` and fill in the required environment variables.
+
+## Project Structure
+
+The project is structured as follows:
+
+```
+├── app/            # Backend code
+│   ├── domain/       # Core business logic
+│   ├── application/  # Use cases and application services
+│   ├── infrastructure/ # External implementations and framework configurations
+│   └── presentation/  # API endpoints and request/response handling
+├── docker-compose.yml # Docker Compose configuration
+├── Dockerfile        # Dockerfile for building the project
+└── .env            # Environment variables
+```
+
+## Development Workflow
+
+1.  **Start the development servers:**
+
+    ```bash
+    # Web
+    litestar run --debug --reload --port=8000 --reload-dir=app
+
+    # Faststream worker
+    faststream run --reload --factory app.infrastructure.worker.factory:create_app
+    ```
+
+2.  **Run tests:**
+
+    ```bash
+    pytest
+    ```
+
+3.  **Use pre-commit hooks:**
+
+    Pre-commit hooks are configured to automatically format and lint your code before each commit.
+
+## Deployment
+
+The project can be deployed using Docker.
+
+1.  **Run the Docker container:**
+
+    ```bash
+    docker-compose up
+    ```
+
+    The `docker-compose.yml` file contains service definitions required for the project.
+
+## Contributing
+
+Contributions are welcome! Please follow the coding standards and best practices outlined in the project.
+
+## Creating new features
+
+To create a new feature using this architecture, follow these steps:
+
+1.  **Define a domain entity (if needed):** Create a new entity in the `app/domain/entities` directory.
+2.  **Define a repository protocol:** Create a new protocol in the `app/application/<feature>/interfaces.py` file that defines the methods that the repository must implement.
+3.  **Define a command/query:** Create a new command/query in the `app/application/<feature>/commands.py` file that represents the action to be performed. This command/query should inherit from `app.application.common.command.Command` or `app.application.common.query.Query`.
+4.  **Define a command/query handler:** Create a new command/query handler in the `app/application/<feature>/handlers.py` file that handles the command/query. This handler should inherit from `app.application.common.command.CommandHandler` or `app.application.common.query.QueryHandler`. It should receive a `session_factory` and a `repository_factory` as dependencies.
+5.  **Define a repository implementation:** Create a new repository implementation in the `app/infrastructure/database/repositories` directory that implements the repository protocol. This repository should receive an `AsyncSession` as a dependency.
+6.  **Register the dependencies:** Register the dependencies in a new or existing `dishka` provider in the `app/infrastructure/di/providers` directory.
+7.  **Expose the endpoint:** Create a new endpoint in the `app/presentation/web/api/v1` directory that uses the command/query handler to handle the request.

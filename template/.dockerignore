@@ -1,0 +1,34 @@
+# Ignore everything
+*
+
+# Allow application files
+!app/
+!public/
+!resources/
+!alembic.ini
+!entrypoint.sh
+!justfile
+!package.json
+!package-lock.json
+!postcss.config.js
+!pyproject.toml
+!tailwind.config.js
+!tsconfig.json
+!tsr.config.json
+!uv.lock
+!vite.config.ts
+
+# But ignore specific public files
+/public/assets
+/public/manifest.json
+/public/hot
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+
+**/*.log
+**/*.db
+**/*.db-journal
+**/.DS_Store
