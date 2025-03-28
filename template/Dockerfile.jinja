@@ -31,25 +31,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project --no-dev
 
-
 ADD . /app
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
-
-##########################################################################
-# Build fronend assets
-##########################################################################
-
-FROM node:20-bookworm AS js-builder
-ARG SENTRY_AUTH_TOKEN
-ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN:-}
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
 
 ##########################################################################
 # Build resulting image
@@ -76,8 +62,5 @@ STOPSIGNAL SIGINT
 COPY --from=python-builder --chown=app:app /app /app
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:/root/.local/bin:$PATH"
-
-# Copy the frontend assets
-COPY --from=js-builder /app/public /app/public
 
 EXPOSE 8000

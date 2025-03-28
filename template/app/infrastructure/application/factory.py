@@ -15,7 +15,6 @@ from app.infrastructure.application.app_configs import (
 from app.infrastructure.application.middleware.rate_limit import RateLimitMiddleware
 from app.infrastructure.application.openapi import get_openapi_config
 from app.infrastructure.application.plugins import get_plugins
-from app.infrastructure.application.templates import get_template_config
 from app.infrastructure.di.registry import get_providers
 from app.infrastructure.di.setup import ContainerMiddleware, dishka_lifespan
 from app.infrastructure.observability.log.adapters.litestar import (
@@ -64,7 +63,6 @@ def create_app() -> Litestar:  # noqa: WPS210 allowed for app setup
         debug=settings.app.debug,
         openapi_config=get_openapi_config(settings),
         compression_config=get_compression_config(settings),
-        template_config=get_template_config(settings),
         csrf_config=get_csrf_config(settings),
         cors_config=get_cors_config(settings),
         plugins=plugins,
