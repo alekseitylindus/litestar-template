@@ -1,8 +1,8 @@
 # noqa: A005
 from typing import Literal, NotRequired, TypedDict
 
-Primitives = str | int | float | bool | None
-JSON = dict[str, Primitives] | list[Primitives] | Primitives
+type Primitives = str | int | float | bool | None
+type JSON = dict[str, Primitives] | list[Primitives] | Primitives
 
 
 class EmailUser(TypedDict):
