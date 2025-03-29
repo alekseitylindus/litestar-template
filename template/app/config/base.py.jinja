@@ -125,7 +125,7 @@ class Settings:
 def get_settings() -> Settings:  # noqa: WPS210 allowed for settings
     with env.prefixed("APP__"):
         environment = cast(
-            Literal["development", "production", "test"],  # noqa: WPS226 allowed for settings
+            "Literal['development', 'production', 'test']",  # noqa: WPS226 allowed for settings
             env.str(
                 "ENVIRONMENT",
                 "development",
@@ -184,7 +184,7 @@ def get_settings() -> Settings:  # noqa: WPS210 allowed for settings
             log_settings = LogSettings(
                 exclude_paths=env.str("EXCLUDE_PATHS", r"\A(?!x)x"),
                 level=cast(
-                    LogLevels,
+                    "LogLevels",
                     env.str(
                         "LEVEL",
                         "INFO",
