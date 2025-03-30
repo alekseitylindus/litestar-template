@@ -7,46 +7,46 @@ from app.application.common.interfaces import (
     RepositoryFactory,
     SessionFactory,
 )
-from app.application.simple.commands import SimpleCommand
-from app.application.simple.events import SimpleNumberRequestedEvent
-from app.application.simple.interfaces import SimpleRepositoryProtocol
+from app.application.sample.commands import SampleCommand
+from app.application.sample.events import SampleNumberRequestedEvent
+from app.application.sample.interfaces import SampleRepositoryProtocol
 
 logger = logging.getLogger(__name__)
 
 
-class SimpleCommandHandler(CommandHandler[SimpleCommand, int]):
+class SampleCommandHandler(CommandHandler[SampleCommand, int]):
     def __init__(
         self,
         session_factory: SessionFactory,
-        repository_factory: RepositoryFactory[SimpleRepositoryProtocol],
+        repository_factory: RepositoryFactory[SampleRepositoryProtocol],
         publisher_factory: PublisherFactory,
     ) -> None:
         self._session_factory = session_factory
         self._repository_factory = repository_factory
         self._publisher_factory = publisher_factory
 
-    async def __call__(self, command: SimpleCommand) -> int:
+    async def __call__(self, command: SampleCommand) -> int:
         async with self._session_factory() as session:
             repository = self._repository_factory(session)
-            result = await repository.get_simple_number(command.number)  # noqa: WPS110
+            result = await repository.get_sample_number(command.number)  # noqa: WPS110
             await session.commit()
 
         async with self._publisher_factory() as publisher:
             await publisher.publish(
-                SimpleNumberRequestedEvent(
+                SampleNumberRequestedEvent(
                     input_number=command.number,
                     result=result,
                 ),
-                namespace="simple",
+                namespace="sample",
             )
 
         return result
 
 
-class SimpleNumberEventHandler(EventHandler[SimpleNumberRequestedEvent, None]):
-    async def __call__(self, event: SimpleNumberRequestedEvent) -> None:
+class SampleNumberEventHandler(EventHandler[SampleNumberRequestedEvent, None]):
+    async def __call__(self, event: SampleNumberRequestedEvent) -> None:
         logger.info(
-            "Received SimpleNumberRequestedEvent - input_number: %d, result: %d",
+            "Received SampleNumberRequestedEvent - input_number: %d, result: %d",
             event.input_number,
             event.result,
         )

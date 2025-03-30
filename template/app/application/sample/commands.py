@@ -4,5 +4,5 @@ from app.application.common.command import Command
 
 
 @dataclass(frozen=True)
-class SimpleCommand(Command):
+class SampleCommand(Command):
     number: int
