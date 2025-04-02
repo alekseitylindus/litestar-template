@@ -19,4 +19,4 @@ def get_csrf_config(settings: Settings) -> CSRFConfig:
 
 
 def get_cors_config(settings: Settings) -> CORSConfig:
-    return CORSConfig(allow_origins=settings.app.allow_origins)
+    return CORSConfig(allow_origin_regex=settings.app.allow_origin_regex)

@@ -17,7 +17,7 @@ class AppSettings:
 
     secret_key: str
     """Application secret key."""
-    url: str = "http://127.0.0.1:8000/"
+    url: str = "http://127.0.0.1:3000/"
     """Frontend url."""
     debug: bool = False
     """Run `Litestar` with `debug=True`."""
@@ -29,8 +29,8 @@ class AppSettings:
     """CSRF Header Name"""
     csrf_cookie_secure: bool = False
     """CSRF Secure Cookie"""
-    allow_origins: list[str] = field(default_factory=lambda: ["*"])
-    """List of origins that are allowed."""
+    allow_origin_regex: str = r".*"
+    """Regex to match origins against."""
     sentry_dsn: str | None = None
     """Sentry DSN."""
     sentry_env: str = "development"  # noqa: WPS226 allowed for settings
@@ -150,7 +150,10 @@ def get_settings() -> Settings:  # noqa: WPS210 allowed for settings
                 csrf_cookie_name=env.str("CSRF_COOKIE_NAME", "csrftoken"),
                 csrf_header_name=env.str("CSRF_HEADER_NAME", "x-csrftoken"),
                 csrf_cookie_secure=env.bool("CSRF_COOKIE_SECURE", False),
-                allow_origins=env.list("ALLOW_ORIGINS", ["*"]),
+                allow_origin_regex=env.str(
+                    "ALLOW_ORIGIN_REGEX",
+                    r"^(https?:\/\/(?:.+\.)?(example\.com|localhost|127\.0\.0\.1)(?::\d{1,5})?)$",
+                ),
                 sentry_dsn=env.str("SENTRY_DSN", None),
                 sentry_env=env.str("SENTRY_ENV", environment),
             )
