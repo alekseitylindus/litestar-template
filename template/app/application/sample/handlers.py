@@ -8,8 +8,8 @@ from app.application.common.interfaces import (
     SessionFactory,
 )
 from app.application.sample.commands import SampleCommand
-from app.application.sample.events import SampleNumberRequestedEvent
 from app.application.sample.interfaces import SampleRepositoryProtocol
+from app.domain.sample.events import SampleNumberRequestedEvent
 
 logger = logging.getLogger(__name__)
 

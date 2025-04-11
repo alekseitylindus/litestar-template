@@ -2,8 +2,8 @@ import logging
 
 from faststream.redis import RedisRouter
 
-from app.application.sample.events import SampleNumberRequestedEvent
 from app.application.sample.handlers import SampleNumberEventHandler
+from app.domain.sample.events import SampleNumberRequestedEvent
 from app.infrastructure.adapters.publisher import Message
 from app.presentation.workers.di import Depends
 
